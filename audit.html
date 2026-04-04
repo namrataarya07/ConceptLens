@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Audit – ConceptLens</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pink: #FF3399;
+            --blue: #00D2FF;
+            --bg: #050505;
+            --surface: #0F0F0F;
+            --border: rgba(255, 255, 255, 0.08);
+            --grid-color: rgba(255, 51, 153, 0.05);
+            --grid-size: 40px;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+                radial-gradient(circle at 50% 50%, rgba(255, 51, 153, 0.05) 0%, transparent 100%),
+                radial-gradient(circle at 80% 50%, rgba(255, 51, 153, 0.1) 0%, transparent 70%);
+            background-size: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size), 100% 100%, 100% 100%;
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .sidebar-item {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .sidebar-item.active {
+            color: var(--pink);
+            text-shadow: 0 0 10px rgba(255, 46, 136, 0.3);
+        }
+
+        .sidebar-item.active::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 20px;
+            background: var(--pink);
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 10px var(--pink);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+        }
+
+        .chat-bubble {
+            max-width: 80%;
+            border-radius: 20px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            animation: slideUp 0.5s ease-out forwards;
+        }
+
+        .system-bubble {
+            background: #111111;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            align-self: flex-start;
+        }
+
+        .user-bubble {
+            background: var(--pink);
+            align-self: flex-end;
+            box-shadow: 0 5px 15px rgba(255, 46, 136, 0.2);
+        }
+
+        .eval-card {
+            background: #111111;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-left: 4px solid var(--pink);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #666;
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .ideal-answer-expand {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+
+        .ideal-answer-expand.open {
+            max-height: 1000px;
+        }
+    </style>
+</head>
+<body class="flex h-screen">
+    <!-- LEFT SIDEBAR -->
+    <aside class="w-1/5 border-r border-white/5 flex flex-col p-10 space-y-16 z-20 bg-black/50 backdrop-blur-xl">
+        <div class="text-xl font-bold tracking-tight cursor-pointer" onclick="window.location.href='index.html'">
+            ConceptLens <span class="text-2xl">🧠</span>
+        </div>
+
+        <nav class="flex flex-col space-y-8 flex-grow">
+            <div class="space-y-6">
+                <a href="subjects.html" class="sidebar-item active flex items-center gap-3 text-lg font-medium group">
+                    <span class="text-xl">📚</span> Subjects
+                </a>
+                <a href="revision.html" class="sidebar-item flex items-center gap-3 text-lg font-light text-gray-500 hover:text-white group">
+                    <span class="text-xl">📘</span> Revision
+                </a>
+                <a href="subjects.html?view=progress" class="sidebar-item flex items-center gap-3 text-lg font-light text-gray-500 hover:text-white group">
+                    <span class="text-xl">📊</span> Dashboard
+                </a>
+                <a href="profile.html" class="sidebar-item flex items-center gap-3 text-lg font-light text-gray-500 hover:text-white group">
+                    <span class="text-xl">👤</span> Profile
+                </a>
+                <a href="profile.html?openSettings=true" class="sidebar-item flex items-center gap-3 text-lg font-light text-gray-500 hover:text-white group">
+                    <span class="text-xl">⚙️</span> Settings
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow flex flex-col relative">
+        <!-- TOP BAR -->
+        <header class="p-8 lg:px-12 flex justify-between items-center border-b border-white/5">
+            <div class="flex items-center gap-4">
+                <span class="text-sm font-semibold tracking-widest text-[#38BDF8] uppercase">Mode: Quick Audit ⚡</span>
+                <span class="px-3 py-1 bg-white/5 rounded-full text-[10px] font-bold text-gray-400 border border-white/10 uppercase tracking-tighter">Hybrid AI + Rule-Based Evaluation</span>
+            </div>
+            <a href="about.html" class="text-sm font-light text-gray-400 hover:text-white transition-colors">About</a>
+        </header>
+
+        <div class="flex-grow flex flex-col overflow-hidden relative">
+            <!-- Topics Panel (Right Side Sticky) -->
+            <div class="absolute top-8 right-8 w-64 glass-card p-6 z-10 hidden lg:block">
+                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Target Topics</h4>
+                <ul id="topic-list" class="space-y-3 text-sm">
+                    <li class="flex items-center gap-2 text-white/90" data-topic="0"><span class="w-1.5 h-1.5 bg-[#FF2E88] rounded-full"></span> COD</li>
+                    <li class="flex items-center gap-2 text-white/40" data-topic="1"><span class="w-1.5 h-1.5 bg-gray-600 rounded-full"></span> Hazardous Waste</li>
+                    <li class="flex items-center gap-2 text-white/40" data-topic="2"><span class="w-1.5 h-1.5 bg-gray-600 rounded-full"></span> Particulate Matter Devices</li>
+                </ul>
+                <div class="mt-6 pt-6 border-t border-white/5">
+                    <p class="text-[10px] text-[#38BDF8] font-bold leading-tight uppercase tracking-tighter italic">Not just answers — we diagnose understanding</p>
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div id="chat-container" class="flex-grow overflow-y-auto p-12 lg:px-24 flex flex-col pb-48">
+                <!-- Chat bubbles will be injected here -->
+            </div>
+
+            <!-- Input Box -->
+            <div class="absolute bottom-0 left-0 right-0 p-10 bg-gradient-to-t from-black via-black/90 to-transparent">
+                <div class="max-w-4xl mx-auto relative flex flex-col gap-3">
+                    <!-- Demo Answer Button -->
+                    <div class="flex justify-start">
+                        <button id="demo-answer-btn" class="px-3 py-1.5 rounded-lg border border-[#38BDF8]/20 bg-[#38BDF8]/5 hover:bg-[#38BDF8]/10 transition-all group flex items-center gap-2">
+                            <span class="text-[10px] text-[#38BDF8] font-bold uppercase tracking-widest">✨ Use Demo Answer</span>
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <textarea 
+                            id="user-input"
+                            class="w-full bg-[#111111] border border-white/10 rounded-2xl p-6 pr-24 text-white placeholder-gray-500 focus:outline-none focus:border-[#FF2E88] transition-all resize-none shadow-2xl"
+                            placeholder="Type your answer here..."
+                            rows="2"
+                        ></textarea>
+                        <button 
+                            id="send-btn"
+                            class="absolute right-4 bottom-4 bg-[#FF2E88] text-white px-6 py-2 rounded-xl font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-lg"
+                        >
+                            SUBMIT
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const demoBtn = document.getElementById('demo-answer-btn');
+
+        const topics = [
+            {
+                name: "COD",
+                question: "Explain Chemical Oxygen Demand (COD) with its chemical reaction and environmental significance.",
+                demo: "COD is the amount of oxygen needed to break down substances in water. It tells how polluted the water is. It is important for checking water quality.",
+                keywords: ["oxygen demand", "oxidation", "K2Cr2O7", "acidic medium", "reaction", "organic matter"],
+                ideal: {
+                    def: "Chemical Oxygen Demand (COD) is a measure of the amount of oxygen required to chemically oxidize organic matter in water.",
+                    reaction: "Organic Matter + K2Cr2O7 + H2SO4 → CO2 + H2O + Cr2(SO4)3",
+                    sig: "High COD values indicate high levels of organic pollution in water bodies, affecting aquatic life."
+                }
+            },
+            {
+                name: "Hazardous Waste",
+                question: "Define Hazardous Waste and discuss its handling procedures and environmental risks.",
+                demo: "Hazardous waste is waste that can be harmful to humans and the environment due to its toxic, flammable or corrosive nature. It can come from industries, hospitals and chemical processes. Handling of hazardous waste includes proper storage, transportation and disposal using methods like incineration or landfilling. It should be handled carefully using protective equipment. Improper handling can lead to serious risks such as soil and water pollution, health hazards and environmental damage.",
+                keywords: ["toxic", "flammable", "corrosive", "incineration", "landfilling", "storage", "disposal"],
+                ideal: {
+                    def: "Hazardous waste is waste that poses substantial or potential threats to public health or the environment.",
+                    reaction: "N/A (Focus on classification: Ignitability, Corrosivity, Reactivity, Toxicity)",
+                    sig: "Improper management leads to long-term soil contamination and groundwater pollution (e.g., bioaccumulation)."
+                }
+            },
+            {
+                name: "Particulate Matter Devices",
+                question: "How does an Electrostatic Precipitator (ESP) work to control particulate matter in industrial emissions?",
+                demo: "An electrostatic precipitator (ESP) is a device used to remove fine particulate matter from exhaust gases, especially in industrial emissions. It works on the principle of electrostatic attraction. The polluted gas passes through a chamber where high-voltage electrodes ionize the particles, giving them a negative charge. These charged particles are then attracted towards positively charged collecting plates where they accumulate. The collected particles are periodically removed by mechanical rapping. ESP is widely used in thermal power plants and industries because it is highly efficient in removing fine particles, reduces air pollution, and helps in controlling particulate emissions without significantly affecting gas flow.",
+                keywords: ["electrostatic attraction", "ionization", "electrodes", "collecting plates", "rapping", "efficiency"],
+                ideal: {
+                    def: "An ESP is a filtration device that removes fine particles from a flowing gas using the force of an induced electrostatic charge.",
+                    reaction: "Ionization of gas molecules → Charging of particles → Migration to plates",
+                    sig: "Achieves >99% efficiency for sub-micron particles, crucial for meeting modern emission standards."
+                }
+            }
+        ];
+
+        let currentTopicIndex = 0;
+
+        function updateTopicSidebar() {
+            const items = document.querySelectorAll('#topic-list li');
+            items.forEach((li, idx) => {
+                const dot = li.querySelector('span');
+                if (idx === currentTopicIndex) {
+                    li.className = "flex items-center gap-2 text-white/90";
+                    dot.className = "w-1.5 h-1.5 bg-[#FF2E88] rounded-full";
+                } else if (idx < currentTopicIndex) {
+                    li.className = "flex items-center gap-2 text-green-400";
+                    dot.className = "w-1.5 h-1.5 bg-green-400 rounded-full";
+                } else {
+                    li.className = "flex items-center gap-2 text-white/40";
+                    dot.className = "w-1.5 h-1.5 bg-gray-600 rounded-full";
+                }
+            });
+        }
+
+        function addBubble(content, type = 'system') {
+            const div = document.createElement('div');
+            div.className = `chat-bubble ${type}-bubble`;
+            div.innerHTML = content;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function showTyping() {
+            const div = document.createElement('div');
+            div.className = 'chat-bubble system-bubble typing-indicator flex items-center gap-2';
+            div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return div;
+        }
+
+        async function evaluateAnswer(answer, topic) {
+            const indicator = showTyping();
+            
+            const steps = [
+                "Analyzing keywords...",
+                "Evaluating conceptual depth...",
+                "Checking missing components...",
+                "Synthesizing qualitative feedback..."
+            ];
+
+            for (let step of steps) {
+                indicator.innerHTML = `<span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mr-3">${step}</span><div class="typing-dot"></div>`;
+                await new Promise(r => setTimeout(r, 600));
+            }
+
+            indicator.remove();
+
+            const lowAnswer = answer.toLowerCase();
+            const missing = [];
+            let insight = "";
+            let feedback = "";
+
+            // Evaluation Logic per Topic
+            if (topic.name === "COD") {
+                if (!lowAnswer.includes("k2cr2o7") && !lowAnswer.includes("dichromate")) missing.push("Oxidizing agent (K2Cr2O7) missing ❌");
+                if (!lowAnswer.includes("reaction") && !lowAnswer.includes("->")) missing.push("Chemical reaction not mentioned ❌");
+                feedback = missing.length > 0 ? "Your answer is conceptually correct but lacks critical technical components like the reaction." : "Perfect coverage of the chemical demand process.";
+                insight = missing.length > 0 ? "You understand the basics, but exam-level depth requires chemical notations." : "Complete mastery of wastewater analysis.";
+            } else if (topic.name === "Hazardous Waste") {
+                if (!lowAnswer.includes("toxic") && !lowAnswer.includes("harmful")) missing.push("Definition of toxicity missing ⚠️");
+                if (!lowAnswer.includes("incineration") && !lowAnswer.includes("landfill")) missing.push("Disposal methods not fully detailed ❌");
+                feedback = "Comprehensive overview of waste handling and environmental impact.";
+                insight = "Strong understanding of waste management protocols.";
+            } else if (topic.name === "Particulate Matter Devices") {
+                if (!lowAnswer.includes("ioniz") && !lowAnswer.includes("charge")) missing.push("Ionization principle detail missing ⚠️");
+                feedback = "Technically sound explanation of electrostatic attraction and efficiency.";
+                insight = "High level of technical clarity on air pollution control devices.";
+            }
+
+            const evalHtml = `
+                <div class="eval-card">
+                    <h4 class="text-[#FF2E88] font-bold text-xs uppercase tracking-widest mb-4">Diagnosis: ${topic.name}</h4>
+                    
+                    <div class="space-y-4 mb-6">
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-tighter">🔍 Missing Components</p>
+                        <ul class="space-y-1 text-sm">
+                            ${missing.map(m => `<li class="text-white/80">${m}</li>`).join('') || '<li class="text-green-400">All key components present ✓</li>'}
+                        </ul>
+                    </div>
+
+                    <div class="space-y-2 mb-6">
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-tighter">💡 Feedback</p>
+                        <p class="text-sm text-white/90">${feedback}</p>
+                    </div>
+
+                    <div class="bg-white/5 p-4 rounded-xl border border-white/5 mb-6">
+                        <p class="text-[10px] font-bold text-[#38BDF8] uppercase tracking-widest mb-1">🧠 Insight Line</p>
+                        <p class="text-sm italic text-gray-300">"${insight}"</p>
+                    </div>
+
+                    <div class="border-t border-white/5 pt-4">
+                        <button onclick="this.nextElementSibling.classList.toggle('open')" class="text-[10px] font-bold text-gray-400 hover:text-white uppercase tracking-widest flex items-center gap-2">
+                            📘 View Ideal Answer <span class="text-[8px]">▼</span>
+                        </button>
+                        <div class="ideal-answer-expand mt-4 space-y-4 text-sm text-gray-400 leading-relaxed">
+                            <p><strong class="text-white">Definition:</strong> ${topic.ideal.def}</p>
+                            ${topic.ideal.reaction !== 'N/A' ? `<p><strong class="text-white">Process/Reaction:</strong> ${topic.ideal.reaction}</p>` : ''}
+                            <p><strong class="text-white">Significance:</strong> ${topic.ideal.sig}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            addBubble(evalHtml, 'system');
+            
+            // Proceed to next topic
+            currentTopicIndex++;
+            updateTopicSidebar();
+
+            if (currentTopicIndex < topics.length) {
+                setTimeout(() => {
+                    addBubble(`Moving to the next topic...`, 'system');
+                    setTimeout(() => {
+                        addBubble(`<div class="font-bold mb-2">Topic ${currentTopicIndex + 1}: ${topics[currentTopicIndex].name}</div>${topics[currentTopicIndex].question}`, 'system');
+                    }, 1000);
+                }, 1500);
+            } else {
+                setTimeout(() => {
+                    addBubble("Congratulations! You've completed the Quick Audit for all EVS topics.", 'system');
+                    addBubble(`
+                        <div class="flex flex-col gap-3 mt-4">
+                            <button onclick="window.location.href='evaluation_board.html'" class="bg-[#FF2E88] text-white px-8 py-3 rounded-xl font-bold text-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,46,136,0.4)]">
+                                See Evaluation Board 📊
+                            </button>
+                            <button onclick="window.location.href='dashboard.html'" class="bg-white/5 border border-white/10 px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all">
+                                Return to Dashboard
+                            </button>
+                        </div>
+                    `, 'system');
+                }, 1500);
+            }
+        }
+
+        sendBtn.addEventListener('click', () => {
+            const val = userInput.value.trim();
+            if (!val) return;
+            
+            addBubble(val, 'user');
+            userInput.value = "";
+            evaluateAnswer(val, topics[currentTopicIndex]);
+        });
+
+        demoBtn.addEventListener('click', () => {
+            userInput.value = topics[currentTopicIndex].demo;
+            userInput.focus();
+        });
+
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendBtn.click();
+            }
+        });
+
+        window.onload = () => {
+            setTimeout(() => {
+                addBubble("Let’s evaluate your understanding.", 'system');
+                setTimeout(() => {
+                    addBubble(`<div class="font-bold mb-2">Topic 1: COD</div>${topics[0].question}`, 'system');
+                }, 800);
+            }, 500);
+        };
+    </script>
+</body>
+</html>

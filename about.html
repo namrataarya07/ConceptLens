@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About – ConceptLens</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pink: #FF3399;
+            --purple: #A855F7;
+            --bg: #050505;
+            --surface: #0F0F0F;
+            --border: rgba(255, 255, 255, 0.08);
+            --grid-color: rgba(255, 51, 153, 0.05);
+            --grid-size: 40px;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+                radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.05) 0%, transparent 100%),
+                radial-gradient(circle at 80% 20%, rgba(255, 51, 153, 0.08) 0%, transparent 50%);
+            background-size: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size), 100% 100%, 100% 100%;
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .glass-card {
+            background: #111111;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 32px;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .team-card {
+            background: #111111;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            text-align: center;
+            transition: all 0.4s ease;
+        }
+
+        .team-card:hover {
+            border-color: rgba(168, 85, 247, 0.3);
+            box-shadow: 0 0 30px rgba(168, 85, 247, 0.15);
+            transform: translateY(-5px);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link.active {
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--purple);
+            box-shadow: 0 0 10px var(--purple);
+        }
+
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .purple-glow {
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- TOP HEADER -->
+    <header class="p-8 lg:px-12 flex justify-between items-center border-b border-white/5 sticky top-0 bg-black/80 backdrop-blur-md z-50">
+        <div class="text-xl font-bold tracking-tight cursor-pointer" onclick="window.location.href='index.html'">
+            ConceptLens <span class="text-2xl">🧠</span>
+        </div>
+        
+        <nav class="hidden md:flex items-center gap-12">
+            <a href="subjects.html?view=progress" class="nav-link text-sm font-light text-gray-400 hover:text-white">Dashboard</a>
+            <a href="about.html" class="nav-link active text-sm">About</a>
+        </nav>
+
+        <div class="flex items-center gap-6">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 p-[2px] cursor-pointer">
+                <div class="w-full h-full rounded-full bg-black flex items-center justify-center text-xs font-bold">L</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-8 py-20 space-y-32">
+        
+        <!-- TITLE SECTION -->
+        <section class="text-center space-y-6 fade-in">
+            <h1 class="text-6xl md:text-7xl font-bold tracking-tighter">About ConceptLens</h1>
+            <p class="text-gray-400 text-xl font-light max-w-2xl mx-auto leading-relaxed">
+                Built to solve a problem we personally faced.
+            </p>
+            <div class="pt-4">
+                <span class="px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold uppercase tracking-[0.2em] text-purple-400">
+                    Built by students, for students
+                </span>
+            </div>
+        </section>
+
+        <!-- TEAM SECTION -->
+        <section class="space-y-16 fade-in" style="animation-delay: 0.2s;">
+            <div class="text-center space-y-2">
+                <h2 class="text-3xl font-bold tracking-tight">Team – Pulse Code</h2>
+                <p class="text-gray-500 text-sm uppercase tracking-widest">The minds behind the lens</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <!-- Card 1 -->
+                <div class="team-card p-12 space-y-6">
+                    <div class="w-24 h-24 bg-gradient-to-tr from-purple-500/20 to-pink-500/20 rounded-3xl mx-auto flex items-center justify-center text-4xl border border-white/5">👩‍💻</div>
+                    <div class="space-y-2">
+                        <h3 class="text-2xl font-bold">Namrata Yadav</h3>
+                        <p class="text-purple-400 text-xs font-bold uppercase tracking-widest">IT Student</p>
+                        <p class="text-gray-500 text-sm font-medium">College: IGDTUW</p>
+                    </div>
+                </div>
+                <!-- Card 2 -->
+                <div class="team-card p-12 space-y-6">
+                    <div class="w-24 h-24 bg-gradient-to-tr from-purple-500/20 to-pink-500/20 rounded-3xl mx-auto flex items-center justify-center text-4xl border border-white/5">👩‍💻</div>
+                    <div class="space-y-2">
+                        <h3 class="text-2xl font-bold">Manshi Rawat</h3>
+                        <p class="text-purple-400 text-xs font-bold uppercase tracking-widest">IT Student</p>
+                        <p class="text-gray-500 text-sm font-medium">College: IGDTUW</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STORY SECTION -->
+        <section class="max-w-3xl mx-auto space-y-12 fade-in" style="animation-delay: 0.4s;">
+            <div class="flex flex-col items-center text-center space-y-4">
+                <div class="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center text-2xl">📖</div>
+                <h2 class="text-4xl font-bold tracking-tight">Our Story</h2>
+            </div>
+            
+            <div class="glass-card p-10 md:p-16 space-y-8 text-gray-300 text-lg md:text-xl font-light leading-relaxed">
+                <p>
+                    “We are first-year IT students at IGDTUW who experienced a common problem during exams — despite studying a lot, we couldn’t clearly identify what we actually understood and what we didn’t.”
+                </p>
+                <p>
+                    “There was too much theory, and everything felt overwhelming. We didn’t know our weak topics, what we missed, or what to revise.”
+                </p>
+                <p>
+                    “That’s when we thought — what if there was a system that could test us instantly and tell us exactly what we don’t understand?”
+                </p>
+                <p class="text-white font-medium purple-glow">
+                    “This idea led to the creation of ConceptLens.”
+                </p>
+            </div>
+        </section>
+
+        <!-- MISSION SECTION -->
+        <section class="max-w-2xl mx-auto text-center space-y-10 fade-in" style="animation-delay: 0.6s;">
+            <div class="space-y-4">
+                <div class="inline-flex items-center gap-3 bg-pink-500/10 border border-pink-500/20 px-4 py-2 rounded-full">
+                    <span class="text-xl">🎯</span>
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-pink-400">Our Goal</h2>
+                </div>
+                <p class="text-3xl md:text-4xl font-light text-white leading-tight">
+                    “To help students move from confusion to clarity by diagnosing their understanding and guiding them towards smarter revision.”
+                </p>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="pt-20 pb-10 text-center opacity-20 fade-in" style="animation-delay: 0.8s;">
+            <p class="text-[10px] font-black uppercase tracking-[0.5em]">ConceptLens – Pulse Code Team</p>
+        </footer>
+    </main>
+</body>
+</html>

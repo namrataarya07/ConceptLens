@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revision Mode – ConceptLens</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pink: #FF3399;
+            --blue: #00D2FF;
+            --bg: #050505;
+            --surface: #0F0F0F;
+            --border: rgba(255, 255, 255, 0.08);
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 32px;
+            --easing: cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: 
+                linear-gradient(rgba(255, 51, 153, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 51, 153, 0.05) 1px, transparent 1px),
+                radial-gradient(circle at 0% 0%, rgba(255, 51, 153, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(0, 210, 255, 0.03) 0%, transparent 50%);
+            background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- Layout & Glassmorphism --- */
+        .glass-panel {
+            background: rgba(15, 15, 15, 0.7);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--border);
+        }
+
+        .sidebar-item {
+            transition: all 0.4s var(--easing);
+            position: relative;
+            opacity: 0.6;
+        }
+
+        .sidebar-item:hover {
+            opacity: 1;
+            transform: translateX(4px);
+        }
+
+        .sidebar-item.active {
+            opacity: 1;
+            color: var(--pink);
+            font-weight: 600;
+        }
+
+        .sidebar-item.active::after {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 18px;
+            background: var(--pink);
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 15px var(--pink);
+        }
+
+        /* --- Bento Grid Elements --- */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .bento-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            transition: all 0.5s var(--easing);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bento-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.05) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .bento-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .bento-card:hover::before {
+            opacity: 1;
+        }
+
+        /* --- Buttons & Inputs --- */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--pink), #D4145A);
+            border-radius: var(--radius-sm);
+            box-shadow: 0 4px 20px rgba(255, 51, 153, 0.3);
+            transition: all 0.4s var(--easing);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 51, 153, 0.5);
+        }
+
+        .input-main {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            transition: all 0.4s var(--easing);
+        }
+
+        .input-main:focus {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--pink);
+            box-shadow: 0 0 0 4px rgba(255, 51, 153, 0.1);
+            outline: none;
+        }
+
+        /* --- Flashcard Upgrade (Horizontal) --- */
+        .flashcard-view-horizontal {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .horizontal-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 500px;
+            transition: all 0.4s var(--easing);
+        }
+
+        .horizontal-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 51, 153, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 51, 153, 0.1);
+        }
+
+        .forgot-box {
+            background: rgba(255, 51, 153, 0.05);
+            border: 1px solid rgba(255, 51, 153, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .forgot-box-yellow {
+            background: rgba(245, 158, 11, 0.05);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        /* --- Animations --- */
+        .animate-fade-up {
+            opacity: 0;
+            animation: fadeUp 0.8s var(--easing) forwards;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loading-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .dot-pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--pink);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 0 0 rgba(255, 51, 153, 0.4); }
+            70% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 0 10px rgba(255, 51, 153, 0); }
+            100% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 0 0 rgba(255, 51, 153, 0); }
+        }
+
+        .highlight-text {
+            background: linear-gradient(to right, var(--pink), var(--pink));
+            background-repeat: no-repeat;
+            background-size: 100% 2px;
+            background-position: 0 100%;
+            padding-bottom: 2px;
+        }
+
+        /* --- High Intensity Demo Glow --- */
+        .demo-glow-box {
+            position: relative;
+            background: rgba(255, 51, 153, 0.1);
+            border: 2px solid var(--pink);
+            box-shadow: 0 0 30px rgba(255, 51, 153, 0.4), inset 0 0 20px rgba(255, 51, 153, 0.2);
+            animation: borderPulse 2s infinite var(--easing);
+        }
+
+        @keyframes borderPulse {
+            0%, 100% { border-color: var(--pink); box-shadow: 0 0 30px rgba(255, 51, 153, 0.4), inset 0 0 20px rgba(255, 51, 153, 0.2); }
+            50% { border-color: #FFFFFF; box-shadow: 0 0 50px rgba(255, 51, 153, 0.7), inset 0 0 30px rgba(255, 51, 153, 0.4); }
+        }
+
+        .demo-badge {
+            background: var(--pink);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            box-shadow: 0 0 15px var(--pink);
+            animation: badgeBounce 1s infinite alternate var(--easing);
+        }
+
+        @keyframes badgeBounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-4px); }
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+    <!-- LEFT SIDEBAR -->
+    <aside class="w-1/5 glass-panel flex flex-col p-10 space-y-16 z-20">
+        <div class="text-xl font-bold tracking-tight cursor-pointer flex items-center gap-3" onclick="window.location.href='index.html'">
+            <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-blue-500 rounded-xl flex items-center justify-center text-xl shadow-lg shadow-pink-500/20">🧠</div>
+            <span>ConceptLens</span>
+        </div>
+
+        <nav class="flex flex-col space-y-8 flex-grow">
+            <div class="space-y-4">
+                <a href="subjects.html" class="sidebar-item flex items-center gap-3 text-sm uppercase tracking-widest font-bold group">
+                    <span class="text-lg opacity-80 group-hover:scale-110 transition-transform">📚</span> Subjects
+                </a>
+                <a href="revision.html" class="sidebar-item active flex items-center gap-3 text-sm uppercase tracking-widest font-bold group">
+                    <span class="text-lg group-hover:scale-110 transition-transform">📘</span> Revision
+                </a>
+                <a href="subjects.html?view=progress" class="sidebar-item flex items-center gap-3 text-sm uppercase tracking-widest font-bold group">
+                    <span class="text-lg opacity-80 group-hover:scale-110 transition-transform">📊</span> Dashboard
+                </a>
+                <a href="profile.html" class="sidebar-item flex items-center gap-3 text-sm uppercase tracking-widest font-bold group">
+                    <span class="text-lg opacity-80 group-hover:scale-110 transition-transform">👤</span> Profile
+                </a>
+                <a href="profile.html?openSettings=true" class="sidebar-item flex items-center gap-3 text-sm uppercase tracking-widest font-bold group">
+                    <span class="text-lg opacity-80 group-hover:scale-110 transition-transform">⚙️</span> Settings
+                </a>
+            </div>
+        </nav>
+
+        <div class="pt-8 border-t border-white/5">
+            <div class="flex items-center gap-3 p-4 glass-panel rounded-2xl bg-white/5 border-white/10">
+                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold">JD</div>
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold">John Doe</span>
+                    <span class="text-[10px] text-gray-500">Pro Member</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow flex flex-col relative overflow-y-auto">
+        <!-- TOP BAR -->
+        <header class="p-6 lg:px-12 flex justify-between items-center glass-panel sticky top-0 z-10 border-x-0 border-t-0">
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                    <span class="text-xs font-bold tracking-widest text-blue-400 uppercase">Revision Mode</span>
+                </div>
+                <div class="h-4 w-[1px] bg-white/10"></div>
+                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-[0.2em] italic">Precision learning powered by ConceptLens AI</p>
+            </div>
+            <div class="flex items-center gap-8">
+                <a href="about.html" class="text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-colors">About</a>
+                <button class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">🔔</button>
+            </div>
+        </header>
+
+        <div id="content-area" class="flex-grow flex flex-col items-center justify-center p-12 max-w-5xl mx-auto w-full">
+            
+            <!-- INPUT SECTION -->
+            <section id="input-section" class="w-full space-y-16 animate-fade-up">
+                <div class="text-center space-y-6">
+                    <h1 class="text-6xl font-black tracking-tighter leading-tight">
+                        Revise <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-500">Smart.</span><br/>
+                        <span class="opacity-90">Not Hard.</span>
+                    </h1>
+                    <p class="text-gray-400 text-lg font-light max-w-xl mx-auto leading-relaxed">
+                        Transform your notes into precision revision modules. Upload, link, or search to begin your last-minute mastery session.
+                    </p>
+                </div>
+
+                <div class="space-y-12">
+                    <!-- Topic Input & Demo -->
+                    <div class="flex flex-col md:flex-row items-stretch gap-6 max-w-4xl mx-auto">
+                        <div class="relative group flex-grow">
+                            <div class="absolute -inset-1 bg-gradient-to-r from-pink-500 to-blue-500 rounded-[24px] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                            <input type="text" id="topic-input" placeholder="What would you like to master today?" 
+                                class="relative w-full input-main p-8 text-white placeholder-gray-500 focus:outline-none text-xl">
+                            <button onclick="startRevision()" class="absolute right-4 top-4 bottom-4 btn-primary text-white px-10 font-black text-xs uppercase tracking-widest">Go</button>
+                        </div>
+                        
+                        <button onclick="useDemoTopic()" class="flex-shrink-0 group flex flex-col items-center justify-center gap-3 px-10 rounded-[24px] demo-glow-box transition-all">
+                            <div class="flex flex-col items-center gap-1">
+                                <span class="demo-badge">Recommended</span>
+                                <p class="text-[10px] font-black text-white uppercase tracking-[0.3em] group-hover:scale-110 transition-transform">Demo Topic</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg font-black text-white tracking-tighter">Wastewater</span>
+                                <span class="text-2xl text-pink-500 group-hover:rotate-12 transition-transform drop-shadow-[0_0_10px_#FF3399]">✨</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Bento Grid Options -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <button class="bento-card group">
+                            <div class="flex items-start justify-between">
+                                <div class="space-y-4">
+                                    <div class="w-12 h-12 bg-pink-500/10 rounded-2xl flex items-center justify-center text-2xl">📁</div>
+                                    <div class="text-left">
+                                        <h3 class="text-lg font-bold">Upload Knowledge</h3>
+                                        <p class="text-sm text-gray-500 mt-1">PDF, TXT, DOCX Support</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-gray-600 group-hover:text-pink-500 transition-colors">IMPORT →</span>
+                            </div>
+                        </button>
+                        <button class="bento-card group">
+                            <div class="flex items-start justify-between">
+                                <div class="space-y-4">
+                                    <div class="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-2xl">📺</div>
+                                    <div class="text-left">
+                                        <h3 class="text-lg font-bold">Video Insight</h3>
+                                        <p class="text-sm text-gray-500 mt-1">Instant YouTube Summary</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-gray-600 group-hover:text-blue-500 transition-colors">PASTE →</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LOADING SECTION -->
+            <section id="loading-section" class="hidden w-full flex-col items-center justify-center space-y-12">
+                <div class="relative">
+                    <div class="absolute -inset-8 bg-pink-500/20 blur-3xl animate-pulse"></div>
+                    <div class="flex gap-4 relative">
+                        <div class="dot-pulse" style="animation-delay: 0s"></div>
+                        <div class="dot-pulse" style="animation-delay: 0.2s"></div>
+                        <div class="dot-pulse" style="animation-delay: 0.4s"></div>
+                    </div>
+                </div>
+                <div class="space-y-4 text-center">
+                    <div id="loading-status" class="text-xl font-bold text-white uppercase tracking-[0.4em] animate-pulse">
+                        Analyzing content...
+                    </div>
+                    <p class="text-xs text-gray-500 font-medium uppercase tracking-widest">Our AI is mapping your knowledge gaps</p>
+                </div>
+            </section>
+
+            <!-- FLASHCARD VIEW (Three Column) -->
+            <section id="flashcard-view" class="hidden w-full flex-col items-center space-y-16 animate-fade-up">
+                <div class="text-center space-y-4">
+                    <p class="text-xs font-black text-blue-400 uppercase tracking-[0.4em]">Revision Mode 📘</p>
+                    <h2 id="revision-title" class="text-5xl font-black tracking-tighter">Wastewater Treatment – <span class="text-pink-500">Last Minute Revision</span></h2>
+                    <p id="revision-subtitle" class="text-gray-400 text-lg max-w-2xl mx-auto font-medium">Flashcards created to focus your revision and highlight weak points.</p>
+                </div>
+
+                <div id="flashcard-grid" class="flashcard-view-horizontal">
+                    <!-- Cards injected here -->
+                </div>
+
+                <div class="flex items-center gap-4 text-gray-500 font-black uppercase tracking-[0.3em] text-[10px] pt-12">
+                    Revision focused on what <span class="text-pink-500">YOU</span> forgot <span class="text-xl">→</span>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        const cards = [
+            {
+                title: "Wastewater Treatment – Primary Treatment",
+                points: [
+                    "Screening removes large debris",
+                    "Sedimentation settles suspended solids",
+                    "Removes ~50-60% solids"
+                ],
+                forgot: [
+                    "Sedimentation removes suspended solids",
+                    "Primary treatment removes 50-60% solids"
+                ],
+                forgotText: "❗ You forgot this during audit:"
+            },
+            {
+                title: "Wastewater Treatment – Secondary Treatment",
+                points: [
+                    "Biological process using microorganisms",
+                    "Degrades organic matter (BOD removal)",
+                    "Includes Activated Sludge Process"
+                ],
+                forgot: [
+                    "Microorganisms degrade organic matter",
+                    "Activated sludge details"
+                ],
+                forgotText: "❗ You missed biological treatment details:"
+            },
+            {
+                title: "Wastewater Treatment – Tertiary Treatment",
+                points: [
+                    "Advanced purification (final polishing)",
+                    "Removes specific nutrients and pathogens",
+                    "Includes filtration and disinfection (Chlorine/UV)"
+                ],
+                forgot: [],
+                forgotText: ""
+            }
+        ];
+
+        let currentCardIndex = 0;
+
+        function useDemoTopic() {
+            document.getElementById('topic-input').value = "Wastewater Treatment";
+            startRevision();
+        }
+
+        async function startRevision() {
+            const topic = document.getElementById('topic-input').value;
+            if (!topic) return;
+
+            document.getElementById('input-section').classList.add('hidden');
+            document.getElementById('loading-section').classList.remove('hidden');
+            document.getElementById('loading-section').classList.add('flex');
+
+            const status = document.getElementById('loading-status');
+            const steps = [
+                "Analyzing content...",
+                "Generating revision notes...",
+                "Highlighting weak areas..."
+            ];
+
+            for (let step of steps) {
+                status.innerText = step;
+                await new Promise(r => setTimeout(r, 800));
+            }
+
+            document.getElementById('loading-section').classList.remove('flex');
+            document.getElementById('loading-section').classList.add('hidden');
+            document.getElementById('flashcard-view').classList.remove('hidden');
+            document.getElementById('flashcard-view').classList.add('flex');
+            
+            renderCard();
+        }
+
+        function renderCard() {
+            const grid = document.getElementById('flashcard-grid');
+            const title = document.getElementById('revision-title');
+            const subtitle = document.getElementById('revision-subtitle');
+            
+            // For demo, we show all cards for Wastewater
+            const topic = document.getElementById('topic-input').value;
+            title.innerHTML = `${topic} – <span class="text-pink-500">Last Minute Revision</span>`;
+            subtitle.innerText = `Flashcards created to focus your revision and highlight weak points for ${topic}.`;
+
+            grid.innerHTML = cards.map((card, index) => `
+                <div class="horizontal-card animate-fade-up" style="animation-delay: ${index * 0.1}s">
+                    <div class="space-y-8">
+                        <h3 class="text-2xl font-black tracking-tight" style="color: ${index === 0 ? '#A855F7' : index === 1 ? '#F59E0B' : '#10B981'}">${card.title}</h3>
+                        <ul class="space-y-4">
+                            ${card.points.map(p => {
+                                const split = p.split(' ');
+                                const firstWord = split[0];
+                                const rest = split.slice(1).join(' ');
+                                return `
+                                    <li class="flex items-start gap-3 text-sm text-gray-400 leading-relaxed">
+                                        <span class="w-1.5 h-1.5 rounded-full mt-1.5" style="background: ${index === 0 ? '#A855F7' : index === 1 ? '#F59E0B' : '#10B981'}"></span>
+                                        <span><strong class="text-white">${firstWord}</strong> ${rest}</span>
+                                    </li>
+                                `;
+                            }).join('')}
+                        </ul>
+                    </div>
+
+                    ${card.forgot.length > 0 ? `
+                        <div class="${index === 1 ? 'forgot-box-yellow' : 'forgot-box'} space-y-3">
+                            <div class="flex items-start gap-2">
+                                <span class="${index === 1 ? 'text-yellow-500' : 'text-pink-500'} text-lg">❗</span>
+                                <p class="text-xs font-black uppercase tracking-widest ${index === 1 ? 'text-yellow-500/80' : 'text-pink-500/80'}">
+                                    You ${index === 1 ? 'missed' : 'forgot this'} <span class="${index === 1 ? '' : 'text-pink-500'}">${index === 1 ? '' : 'during audit:'}</span>
+                                </p>
+                            </div>
+                            <p class="text-xs text-white leading-relaxed">
+                                ${card.forgot.map(f => {
+                                    if (f.includes('Sedimentation')) {
+                                        return `<span class="highlight-text font-bold">Sedimentation</span> ${f.replace('Sedimentation', '')}`;
+                                    }
+                                    if (f.includes('biological treatment')) {
+                                        return `<span class="underline decoration-yellow-500/50 underline-offset-4">${f}</span>`;
+                                    }
+                                    return f;
+                                }).join('. ')}
+                                ${index === 0 ? '. Primary treatment removes 50-60% of solids.' : ''}
+                            </p>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function nextCard() {
+            // No longer used in horizontal view
+        }
+
+        // Bento Grid Mouse Tracking
+        document.querySelectorAll('.bento-card').forEach(card => {
+            card.onmousemove = e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--x', `${x}px`);
+                card.style.setProperty('--y', `${y}px`);
+            };
+        });
+    </script>
+</body>
+</html>

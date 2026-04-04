@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluation Dashboard – ConceptLens</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pink: #FF3399;
+            --blue: #00D2FF;
+            --bg: #050505;
+            --surface: #0F0F0F;
+            --border: rgba(255, 255, 255, 0.08);
+            --grid-color: rgba(255, 51, 153, 0.05);
+            --grid-size: 40px;
+            --weak: #EF4444;
+            --moderate: #F59E0B;
+            --strong: #22C55E;
+            --easing: cubic-bezier(0.23, 1, 0.32, 1);
+            --radius-md: 20px;
+            --radius-lg: 32px;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+                radial-gradient(circle at 0% 0%, rgba(255, 51, 153, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(0, 210, 255, 0.05) 0%, transparent 40%);
+            background-size: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size), 100% 100%, 100% 100%;
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- Glassmorphism & Layout --- */
+        .glass-panel {
+            background: rgba(15, 15, 15, 0.7);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--border);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            transition: all 0.5s var(--easing);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* --- Sidebar & Nav --- */
+        .sidebar-item {
+            transition: all 0.4s var(--easing);
+            position: relative;
+            opacity: 0.6;
+        }
+
+        .sidebar-item:hover {
+            opacity: 1;
+            transform: translateX(4px);
+        }
+
+        .sidebar-item.active {
+            opacity: 1;
+            color: var(--pink);
+            font-weight: 600;
+        }
+
+        /* --- Bento Grid elements --- */
+        .heatmap-row {
+            transition: all 0.5s var(--easing);
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .heatmap-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+            padding-left: 2rem;
+        }
+
+        .progress-container {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1.5s var(--easing);
+        }
+
+        /* --- Animations --- */
+        .animate-fade-up {
+            opacity: 0;
+            animation: fadeUp 0.8s var(--easing) forwards;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+
+        /* --- Buttons --- */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--pink), #D4145A);
+            box-shadow: 0 4px 20px rgba(255, 51, 153, 0.3);
+            transition: all 0.4s var(--easing);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 51, 153, 0.5);
+        }
+
+        /* Tooltip */
+        .info-icon:hover + .tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .tooltip {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s var(--easing);
+        }
+
+        /* Revision Modal */
+        #revision-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #111111;
+            color: #ffffff;
+            padding: 3rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            max-height: 85vh;
+            overflow-y: auto;
+            width: 95%;
+            max-width: 1100px;
+            position: relative;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+    <!-- LEFT SIDEBAR -->
+    <aside class="w-1/5 glass-panel flex flex-col p-10 space-y-16 z-20">
+        <div class="text-xl font-bold tracking-tight cursor-pointer flex items-center gap-3" onclick="window.location.href='index.html'">
+            <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-blue-500 rounded-xl flex items-center justify-center text-xl shadow-lg shadow-pink-500/20">🧠</div>
+            <span>ConceptLens</span>
+        </div>
+
+        <nav class="flex flex-col space-y-8 flex-grow">
+            <div class="space-y-4">
+                <a href="subjects.html" class="sidebar-item flex items-center gap-3 text-sm uppercase tracking-widest font-bold group">
+                    <span class="text-lg opacity-80 group-hover:scale-110 transition-transform">📚</span> Subjects
+                </a>
+                <a href="revision.html" class="sidebar-item flex items-center gap-3 text-sm uppercase tracking-widest font-bold group">
+                    <span class="text-lg opacity-80 group-hover:scale-110 transition-transform">📘</span> Revision
+                </a>
+                <a href="subjects.html?view=progress" class="sidebar-item active flex items-center gap-3 text-sm uppercase tracking-widest font-bold group">
+                    <span class="text-lg group-hover:scale-110 transition-transform">📊</span> Dashboard
+                </a>
+                <a href="profile.html" class="sidebar-item flex items-center gap-3 text-sm uppercase tracking-widest font-bold group">
+                    <span class="text-lg opacity-80 group-hover:scale-110 transition-transform">👤</span> Profile
+                </a>
+                <a href="profile.html?openSettings=true" class="sidebar-item flex items-center gap-3 text-sm uppercase tracking-widest font-bold group">
+                    <span class="text-lg opacity-80 group-hover:scale-110 transition-transform">⚙️</span> Settings
+                </a>
+            </div>
+        </nav>
+
+        <div class="pt-8 border-t border-white/5">
+            <div class="flex items-center gap-3 p-4 glass-panel rounded-2xl bg-white/5 border-white/10">
+                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold">JD</div>
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold">John Doe</span>
+                    <span class="text-[10px] text-gray-500">Pro Member</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow flex flex-col relative overflow-y-auto">
+        <!-- TOP BAR -->
+        <header class="p-6 lg:px-12 flex justify-between items-center glass-panel sticky top-0 z-10 border-x-0 border-t-0">
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                    <span class="text-xs font-bold tracking-widest text-blue-400 uppercase">Evaluation Dashboard</span>
+                </div>
+                <div class="h-4 w-[1px] bg-white/10"></div>
+                <div class="relative flex items-center gap-2">
+                    <span class="px-3 py-1 bg-white/5 rounded-full text-[10px] font-bold text-gray-400 border border-white/10 uppercase tracking-tighter cursor-help info-icon">AI Insights Active</span>
+                    <div class="tooltip absolute top-full left-0 mt-2 w-64 glass-panel p-4 text-[10px] text-gray-400 z-50 rounded-xl">
+                        Real-time cognitive mapping: Analyzing coverage, structure, and keyword density.
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-8">
+                <a href="about.html" class="text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-colors">About</a>
+                <button class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">🔔</button>
+            </div>
+        </header>
+
+        <div class="p-10 lg:p-16 max-w-7xl mx-auto w-full space-y-16">
+            
+            <!-- 1. UNDERSTANDING HEATMAP -->
+            <section class="space-y-8 animate-fade-up stagger-1">
+                <div class="flex justify-between items-end">
+                    <div class="space-y-2">
+                        <h2 class="text-4xl font-black tracking-tighter">Understanding Heatmap</h2>
+                        <p class="text-xs text-gray-500 uppercase tracking-[0.3em] font-bold">Multi-dimensional cognitive analysis</p>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/5 shadow-xl">
+                        <div class="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
+                        <span class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Live Audit Feed</span>
+                    </div>
+                </div>
+                
+                <div class="glass-card overflow-hidden border-white/5">
+                    <!-- COD -->
+                    <div class="heatmap-row p-10 flex flex-col md:flex-row gap-10 items-center group">
+                        <div class="w-full md:w-1/4 space-y-2">
+                            <h4 class="font-black text-white text-2xl tracking-tight">COD</h4>
+                            <div class="flex items-center gap-2">
+                                <div class="w-1.5 h-1.5 bg-red-500 rounded-full shadow-[0_0_8px_#EF4444]"></div>
+                                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-red-500">Critical Gap</span>
+                            </div>
+                        </div>
+                        <div class="w-full md:w-2/4 space-y-4">
+                            <div class="flex justify-between items-end">
+                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Proficiency Level</span>
+                                <span class="text-sm font-black text-red-500">42%</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar bg-gradient-to-r from-red-600 to-red-400" style="width: 0%; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);" data-width="42%"></div>
+                            </div>
+                            <p class="text-sm text-gray-400 font-medium italic">"Consistent omission of chemical notations and primary oxidizing agents."</p>
+                        </div>
+                        <div class="w-full md:w-1/4 flex justify-end">
+                            <button onclick="showRevision('COD')" class="btn-primary text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest">Revise Gap →</button>
+                        </div>
+                    </div>
+
+                    <!-- Hazardous Waste -->
+                    <div class="heatmap-row p-10 flex flex-col md:flex-row gap-10 items-center group">
+                        <div class="w-full md:w-1/4 space-y-2">
+                            <h4 class="font-black text-white text-2xl tracking-tight">Waste Mgmt</h4>
+                            <div class="flex items-center gap-2">
+                                <div class="w-1.5 h-1.5 bg-yellow-500 rounded-full shadow-[0_0_8px_#F59E0B]"></div>
+                                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-500">Moderate</span>
+                            </div>
+                        </div>
+                        <div class="w-full md:w-2/4 space-y-4">
+                            <div class="flex justify-between items-end">
+                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Proficiency Level</span>
+                                <span class="text-sm font-black text-yellow-500">68%</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar bg-gradient-to-r from-yellow-600 to-yellow-400" style="width: 0%; box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);" data-width="68%"></div>
+                            </div>
+                            <p class="text-sm text-gray-400 font-medium italic">"Structural understanding is sound; lacks depth in disposal classification."</p>
+                        </div>
+                        <div class="w-full md:w-1/4 flex justify-end">
+                            <button onclick="showRevision('Waste')" class="bg-white/5 border border-white/10 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">Polish →</button>
+                        </div>
+                    </div>
+
+                    <!-- ESP -->
+                    <div class="heatmap-row p-10 flex flex-col md:flex-row gap-10 items-center border-none group">
+                        <div class="w-full md:w-1/4 space-y-2">
+                            <h4 class="font-black text-white text-2xl tracking-tight">ESP Control</h4>
+                            <div class="flex items-center gap-2">
+                                <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_#10B981]"></div>
+                                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">High Mastery</span>
+                            </div>
+                        </div>
+                        <div class="w-full md:w-2/4 space-y-4">
+                            <div class="flex justify-between items-end">
+                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Proficiency Level</span>
+                                <span class="text-sm font-black text-emerald-500">92%</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar bg-gradient-to-r from-emerald-600 to-emerald-400" style="width: 0%; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);" data-width="92%"></div>
+                            </div>
+                            <p class="text-sm text-gray-400 font-medium italic">"Excellent conceptual clarity. Target industry-specific examples for 100%."</p>
+                        </div>
+                        <div class="w-full md:w-1/4 flex justify-end">
+                            <button onclick="showRevision('ESP')" class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/20 transition-all">Optimize →</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-up stagger-2">
+                <!-- 2. PERFORMANCE SUMMARY (Bento Card) -->
+                <div class="glass-card p-10 space-y-10 relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-pink-500/10 rounded-full blur-3xl"></div>
+                    <div class="space-y-2">
+                        <h3 class="text-xl font-black tracking-tight flex items-center gap-3">
+                            <span class="w-8 h-8 bg-pink-500/10 rounded-lg flex items-center justify-center text-sm">📈</span>
+                            Summary
+                        </h3>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Overall Session Metrics</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="space-y-1">
+                            <p class="text-[9px] font-black text-gray-500 uppercase tracking-tighter">Avg. Score</p>
+                            <span class="text-4xl font-black text-white tracking-tighter">67%</span>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-[9px] font-black text-gray-500 uppercase tracking-tighter">Weak</p>
+                            <span class="text-4xl font-black text-red-500 tracking-tighter">1</span>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-[9px] font-black text-gray-500 uppercase tracking-tighter">Strong</p>
+                            <span class="text-4xl font-black text-emerald-500 tracking-tighter">1</span>
+                        </div>
+                    </div>
+
+                    <div class="p-6 bg-red-500/5 border border-red-500/10 rounded-2xl flex items-center gap-4 group">
+                        <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">⚠️</div>
+                        <div class="space-y-1">
+                            <p class="text-[9px] font-black text-red-400 uppercase tracking-[0.2em]">Priority Action</p>
+                            <p class="text-xs font-bold text-white tracking-tight">Address COD Critical Gaps</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. AI INSIGHT PANEL (Bento Card - Large) -->
+                <div class="lg:col-span-2 glass-card p-10 space-y-10 border-l-4 border-blue-500 relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute -bottom-10 -right-10 w-60 h-40 bg-blue-500/5 rounded-full blur-3xl"></div>
+                    <div class="flex items-center justify-between">
+                        <div class="space-y-2">
+                            <h3 class="text-xl font-black tracking-tight flex items-center gap-3">
+                                <span class="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center text-sm">🧠</span>
+                                AI Diagnostic
+                            </h3>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Semantic understanding analysis</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="px-3 py-1.5 bg-blue-500/10 text-blue-400 text-[9px] font-black rounded-lg border border-blue-500/20 uppercase tracking-widest">Logic Mapping</span>
+                            <span class="px-3 py-1.5 bg-pink-500/10 text-pink-400 text-[9px] font-black rounded-lg border border-pink-500/20 uppercase tracking-widest">Coverage Check</span>
+                        </div>
+                    </div>
+
+                    <p class="text-2xl text-gray-300 leading-tight font-light italic">
+                        "Your conceptual foundation is <span class="text-white font-black border-b-2 border-blue-500/30">above average</span>, but retention of <span class="text-white font-black border-b-2 border-blue-500/30">technical catalysts</span> and <span class="text-white font-black border-b-2 border-blue-500/30">reaction chains</span> is your primary bottleneck."
+                    </p>
+
+                    <div class="flex items-center gap-6 pt-4 border-t border-white/5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Structural Clarity: High</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-pink-500"></div>
+                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Retention Gap: Moderate</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. SCORE BREAKDOWN -->
+            <section class="space-y-8 animate-fade-up stagger-3">
+                <div class="space-y-2">
+                    <h3 class="text-2xl font-black tracking-tight">Diagnostic Breakdown</h3>
+                    <p class="text-xs text-gray-500 uppercase tracking-[0.3em] font-bold">Granular competency scores</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="glass-card p-8 space-y-6">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Keywords</span>
+                            <span class="text-sm font-black text-white">65%</span>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar bg-blue-500" style="width: 0%; box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);" data-width="65%"></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-8 space-y-6">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Cognitive Depth</span>
+                            <span class="text-sm font-black text-white">82%</span>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar bg-emerald-500" style="width: 0%; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);" data-width="82%"></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-8 space-y-6">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Topic Coverage</span>
+                            <span class="text-sm font-black text-white">55%</span>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar bg-yellow-500" style="width: 0%; box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);" data-width="55%"></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-8 space-y-6">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Structure</span>
+                            <span class="text-sm font-black text-white">40%</span>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar bg-red-500" style="width: 0%; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);" data-width="40%"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. EXAM STRATEGY PANEL -->
+            <section class="glass-card p-12 space-y-10 animate-fade-up" style="animation-delay: 0.4s;">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-8">
+                    <div class="space-y-2">
+                        <h3 class="text-3xl font-black tracking-tighter">Exam Strategy <span class="text-pink-500">🎯</span></h3>
+                        <p class="text-xs text-gray-500 uppercase tracking-widest font-bold">Personalized mastery roadmap</p>
+                    </div>
+                    <button class="btn-primary text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl">Download Checklist</button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <ul class="space-y-6">
+                        <li class="flex gap-6 group">
+                            <span class="flex-shrink-0 w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center text-xs font-black group-hover:scale-110 transition-transform">01</span>
+                            <div class="space-y-1">
+                                <p class="text-sm text-gray-300 leading-relaxed">Prioritize <span class="text-white font-black">COD revision</span>. It represents your highest risk area for point loss.</p>
+                            </div>
+                        </li>
+                        <li class="flex gap-6 group">
+                            <span class="flex-shrink-0 w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center text-xs font-black group-hover:scale-110 transition-transform">02</span>
+                            <div class="space-y-1">
+                                <p class="text-sm text-gray-300 leading-relaxed">Memorize the <span class="text-white font-black">Potassium Dichromate reaction</span>. Use active recall for the catalyst list.</p>
+                            </div>
+                        </li>
+                    </ul>
+                    <ul class="space-y-6">
+                        <li class="flex gap-6 group">
+                            <span class="flex-shrink-0 w-10 h-10 rounded-2xl bg-yellow-500/10 text-yellow-500 flex items-center justify-center text-xs font-black group-hover:scale-110 transition-transform">03</span>
+                            <div class="space-y-1">
+                                <p class="text-sm text-gray-300 leading-relaxed">Structure your <span class="text-white font-black">Waste Management</span> answers using the ICRT classification framework.</p>
+                            </div>
+                        </li>
+                        <li class="flex gap-6 group">
+                            <span class="flex-shrink-0 w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-xs font-black group-hover:scale-110 transition-transform">04</span>
+                            <div class="space-y-1">
+                                <p class="text-sm text-gray-300 leading-relaxed">Light review for <span class="text-white font-black">ESP Control</span>. Focus on adding industrial efficiency metrics (99%+).</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 6. ACTION CENTER -->
+            <section class="space-y-8 animate-fade-up pb-20" style="animation-delay: 0.5s;">
+                <div class="space-y-2">
+                    <h3 class="text-xl font-black tracking-tight">Mastery Console</h3>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Immediate Next Steps</p>
+                </div>
+                <div class="flex flex-wrap gap-4">
+                    <button onclick="showRevision('COD')" class="btn-primary text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl">Revise COD Gaps</button>
+                    <button onclick="showRevision('Waste')" class="bg-white/5 border border-white/10 px-10 py-5 rounded-2xl font-black text-xs text-gray-300 uppercase tracking-widest hover:bg-white/10 transition-all">Polish Waste Mgmt</button>
+                    <button onclick="window.location.href='input.html'" class="bg-white/5 border border-white/10 px-10 py-5 rounded-2xl font-black text-xs text-gray-300 uppercase tracking-widest hover:bg-white/10 transition-all">Retake Audit</button>
+                    <button class="bg-white/5 border border-white/10 px-10 py-5 rounded-2xl font-black text-xs text-gray-300 uppercase tracking-widest hover:bg-blue-500/10 hover:border-blue-500/30 transition-all">Deep Audit Mode</button>
+                    <button onclick="showRevision('LastMinute')" class="bg-blue-500 text-black px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_0_30px_rgba(0,210,255,0.4)] hover:scale-105 transition-all">Last Minute Revision ⚡</button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- REVISION MODAL (SMART LOGIC SIMULATION) -->
+    <div id="revision-modal">
+        <div class="modal-content">
+            <button onclick="closeRevision()" class="absolute top-8 right-8 text-gray-500 hover:text-white transition-colors text-xl">✕</button>
+            <div id="modal-content" class="space-y-8">
+                <!-- Content will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize animations
+        window.onload = () => {
+            setTimeout(() => {
+                document.querySelectorAll('.progress-bar').forEach(bar => {
+                    bar.style.width = bar.getAttribute('data-width');
+                });
+            }, 500);
+        };
+
+        function showRevision(topic) {
+            const modal = document.getElementById('revision-modal');
+            const content = document.getElementById('modal-content');
+            modal.style.display = 'flex';
+            
+            let html = '';
+            if(topic === 'COD') {
+                html = `
+                    <div class="space-y-10 animate-fade-up">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_#EF4444]"></div>
+                                <h2 class="text-4xl font-black tracking-tighter">COD: Chemical Oxygen Demand</h2>
+                            </div>
+                            <p class="text-gray-400 text-lg">Detailed breakdown of the identified knowledge gap.</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="glass-card p-8 border-red-500/20 bg-red-500/5 space-y-4">
+                                <h4 class="font-black text-red-500 uppercase tracking-widest text-xs">The Missing Link</h4>
+                                <p class="text-sm text-gray-300 leading-relaxed">You consistently omit the <strong>Potassium Dichromate (K2Cr2O7)</strong> reaction in acidic media. This is the "gold standard" for COD measurement.</p>
+                            </div>
+                            <div class="glass-card p-8 border-blue-500/20 bg-blue-500/5 space-y-4">
+                                <h4 class="font-black text-blue-500 uppercase tracking-widest text-xs">The Fix</h4>
+                                <p class="text-sm text-gray-300 leading-relaxed">Always state: "Organic matter is oxidized by a known excess of K2Cr2O7 in the presence of H2SO4 and Ag2SO4 catalyst."</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <h3 class="text-xl font-black">Key Formula to Memorize</h3>
+                            <div class="p-8 glass-card bg-white/5 border-white/10 font-mono text-pink-500 text-lg text-center">
+                                COD (mg/L) = [(V1 - V2) * N * 8000] / S
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if(topic === 'Waste') {
+                html = `
+                    <div class="space-y-10 animate-fade-up">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_10px_#F59E0B]"></div>
+                                <h2 class="text-4xl font-black tracking-tighter">Hazardous Waste Management</h2>
+                            </div>
+                            <p class="text-gray-400 text-lg">Structural refinement for disposal classifications.</p>
+                        </div>
+                        
+                        <div class="space-y-8">
+                            <div class="glass-card p-8 space-y-6">
+                                <h4 class="font-black text-white uppercase tracking-widest text-xs">ICRT Framework</h4>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div class="text-center p-4 bg-white/5 rounded-xl border border-white/5">
+                                        <p class="text-xl font-black text-pink-500">I</p>
+                                        <p class="text-[9px] text-gray-500 uppercase font-bold">Ignitability</p>
+                                    </div>
+                                    <div class="text-center p-4 bg-white/5 rounded-xl border border-white/5">
+                                        <p class="text-xl font-black text-pink-500">C</p>
+                                        <p class="text-[9px] text-gray-500 uppercase font-bold">Corrosivity</p>
+                                    </div>
+                                    <div class="text-center p-4 bg-white/5 rounded-xl border border-white/5">
+                                        <p class="text-xl font-black text-pink-500">R</p>
+                                        <p class="text-[9px] text-gray-500 uppercase font-bold">Reactivity</p>
+                                    </div>
+                                    <div class="text-center p-4 bg-white/5 rounded-xl border border-white/5">
+                                        <p class="text-xl font-black text-pink-500">T</p>
+                                        <p class="text-[9px] text-gray-500 uppercase font-bold">Toxicity</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if(topic === 'LastMinute') {
+                html = `
+                    <div class="space-y-12 animate-fade-up text-center">
+                        <div class="space-y-4">
+                            <h2 class="text-5xl font-black tracking-tighter leading-none">Full Audit – <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-500">Last Minute Revision</span></h2>
+                            <p class="text-gray-400 text-lg font-medium max-w-2xl mx-auto">Summary of all audited topics with a focus on addressing critical gaps.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                            <!-- Topic 1: COD -->
+                            <div class="glass-card p-8 space-y-8 border-red-500/20 bg-red-500/5 flex flex-col justify-between">
+                                <div class="space-y-4">
+                                    <h3 class="text-2xl font-black text-red-500 tracking-tight">COD Analysis</h3>
+                                    <ul class="space-y-4">
+                                        <li class="flex items-start gap-3">
+                                            <span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5"></span>
+                                            <p class="text-sm text-gray-300">Oxidization of organic matter using chemicals.</p>
+                                        </li>
+                                        <li class="flex items-start gap-3">
+                                            <span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5"></span>
+                                            <p class="text-sm text-gray-300 font-bold text-white">Focus: K2Cr2O7 in acidic media.</p>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl space-y-2">
+                                    <p class="text-[10px] font-black text-red-500 uppercase tracking-widest">❗ Critical Gap Found:</p>
+                                    <p class="text-xs text-white font-medium">You forgot the <span class="highlight-text">Potassium Dichromate</span> reaction during audit.</p>
+                                </div>
+                            </div>
+
+                            <!-- Topic 2: Waste -->
+                            <div class="glass-card p-8 space-y-8 border-yellow-500/20 bg-yellow-500/5 flex flex-col justify-between">
+                                <div class="space-y-4">
+                                    <h3 class="text-2xl font-black text-yellow-500 tracking-tight">Waste Mgmt</h3>
+                                    <ul class="space-y-4">
+                                        <li class="flex items-start gap-3">
+                                            <span class="w-1.5 h-1.5 bg-yellow-500 rounded-full mt-1.5"></span>
+                                            <p class="text-sm text-gray-300">ICRT Framework: Ignitability, Corrosivity, Reactivity, Toxicity.</p>
+                                        </li>
+                                        <li class="flex items-start gap-3">
+                                            <span class="w-1.5 h-1.5 bg-yellow-500 rounded-full mt-1.5"></span>
+                                            <p class="text-sm text-gray-300">Disposal: Landfills, Incineration, Neutralization.</p>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl space-y-2">
+                                    <p class="text-[10px] font-black text-yellow-500 uppercase tracking-widest">❗ Moderate Gap:</p>
+                                    <p class="text-xs text-white font-medium">Missed structural depth in <span class="highlight-text">disposal classification</span>.</p>
+                                </div>
+                            </div>
+
+                            <!-- Topic 3: ESP -->
+                            <div class="glass-card p-8 space-y-8 border-emerald-500/20 bg-emerald-500/5 flex flex-col justify-between">
+                                <div class="space-y-4">
+                                    <h3 class="text-2xl font-black text-emerald-500 tracking-tight">ESP Control</h3>
+                                    <ul class="space-y-4">
+                                        <li class="flex items-start gap-3">
+                                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5"></span>
+                                            <p class="text-sm text-gray-300">High-efficiency particulate matter removal (99%+).</p>
+                                        </li>
+                                        <li class="flex items-start gap-3">
+                                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5"></span>
+                                            <p class="text-sm text-gray-300">Target industrial-specific examples for point maximization.</p>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-3">
+                                    <div class="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                        <span class="text-emerald-500 text-[10px]">✓</span>
+                                    </div>
+                                    <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Mastery: 92%</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-center gap-3 text-gray-500 font-black uppercase tracking-[0.3em] text-[10px]">
+                            Revision focused on what <span class="text-pink-500">YOU</span> forgot <span class="text-lg">→</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html = `
+                    <div class="text-center py-20 space-y-6 animate-fade-up">
+                        <div class="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto">
+                            <span class="text-3xl">✨</span>
+                        </div>
+                        <h2 class="text-3xl font-black tracking-tighter">Mastery Insight</h2>
+                        <p class="text-gray-400 max-w-sm mx-auto">You've achieved high proficiency in this module. Focus on high-level industrial applications to secure 100%.</p>
+                    </div>
+                `;
+            }
+            content.innerHTML = html;
+        }
+
+        function closeRevision() {
+            document.getElementById('revision-modal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

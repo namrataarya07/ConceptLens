@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Audit – ConceptLens</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pink: #FF3399;
+            --blue: #00D2FF;
+            --bg: #050505;
+            --surface: #0F0F0F;
+            --border: rgba(255, 255, 255, 0.08);
+            --grid-color: rgba(255, 51, 153, 0.05);
+            --grid-size: 40px;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+                radial-gradient(circle at 20% 20%, rgba(255, 51, 153, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 51, 153, 0.05) 0%, transparent 50%);
+            background-size: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size), 100% 100%, 100% 100%;
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .glass-card {
+            background: #111111;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+        }
+
+        .level-indicator {
+            transition: all 0.3s ease;
+        }
+
+        .level-active {
+            color: var(--pink);
+            border-color: var(--pink);
+            box-shadow: 0 0 15px rgba(255, 46, 136, 0.2);
+        }
+
+        .sidebar-item {
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-item.active {
+            color: var(--pink);
+        }
+
+        .loading-bar {
+            height: 2px;
+            background: var(--pink);
+            box-shadow: 0 0 10px var(--pink);
+            transition: width 0.4s ease;
+        }
+
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .input-glow:focus {
+            border-color: var(--pink);
+            box-shadow: 0 0 20px rgba(255, 46, 136, 0.1);
+        }
+
+        .typing-indicator span {
+            animation: blink 1.4s infinite both;
+        }
+        @keyframes blink {
+            0% { opacity: .2; }
+            20% { opacity: 1; }
+            100% { opacity: .2; }
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+    <!-- LEFT SIDEBAR -->
+    <aside class="w-1/5 border-r border-white/5 flex flex-col p-10 space-y-16 z-20 bg-black/50 backdrop-blur-xl">
+        <div class="text-xl font-bold tracking-tight cursor-pointer" onclick="window.location.href='index.html'">
+            ConceptLens <span class="text-2xl">🧠</span>
+        </div>
+
+        <nav class="flex flex-col space-y-8 flex-grow">
+            <div class="space-y-6">
+                <a href="subjects.html" class="sidebar-item flex items-center gap-3 text-lg font-light text-gray-500 hover:text-white group">
+                    <span class="text-xl">📚</span> Subjects
+                </a>
+                <a href="revision.html" class="sidebar-item flex items-center gap-3 text-lg font-light text-gray-500 hover:text-white group">
+                    <span class="text-xl">📘</span> Revision
+                </a>
+                <a href="subjects.html?view=progress" class="sidebar-item flex items-center gap-3 text-lg font-light text-gray-500 hover:text-white group">
+                    <span class="text-xl">📊</span> Dashboard
+                </a>
+                <a href="#" class="sidebar-item flex items-center gap-3 text-lg font-light text-gray-500 hover:text-white group">
+                    <span class="text-xl">👤</span> Profile
+                </a>
+                <a href="#" class="sidebar-item flex items-center gap-3 text-lg font-light text-gray-500 hover:text-white group">
+                    <span class="text-xl">⚙️</span> Settings
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow flex flex-col relative overflow-hidden">
+        <!-- TOP BAR -->
+        <header class="p-8 lg:px-12 flex justify-between items-center border-b border-white/5 bg-black/80 backdrop-blur-md z-10">
+            <div class="flex flex-col">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm font-semibold tracking-widest text-[#FF2E88] uppercase">Deep Audit 🧠</span>
+                    <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest px-2 py-0.5 border border-white/10 rounded">Multi-Level Cognitive Evaluation</span>
+                </div>
+            </div>
+            <a href="about.html" class="text-sm font-light text-gray-400 hover:text-white transition-colors">About</a>
+        </header>
+
+        <div class="flex-grow flex flex-col items-center justify-center p-10 overflow-y-auto">
+            <div id="audit-container" class="w-full max-w-4xl space-y-10">
+                
+                <!-- PROGRESS & STATUS -->
+                <div class="flex flex-col gap-6">
+                    <div class="flex justify-between items-end">
+                        <div class="space-y-1">
+                            <h2 id="topic-title" class="text-2xl font-bold">Chemical Oxygen Demand (COD)</h2>
+                            <p class="text-xs text-gray-500 uppercase tracking-widest">Evaluating across Bloom’s Taxonomy Levels</p>
+                        </div>
+                        <div class="text-right">
+                            <span id="level-count" class="text-xs font-black text-[#FF2E88] uppercase tracking-widest">Level 1/5</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Level Icons -->
+                    <div class="flex justify-between gap-4">
+                        <div class="level-indicator level-active flex-grow h-1 border-t-2 border-[#FF2E88]/20 pt-4 text-[9px] font-bold uppercase tracking-tighter opacity-100" data-level="1">Basic</div>
+                        <div class="level-indicator flex-grow h-1 border-t-2 border-white/5 pt-4 text-[9px] font-bold uppercase tracking-tighter opacity-40" data-level="2">Conceptual</div>
+                        <div class="level-indicator flex-grow h-1 border-t-2 border-white/5 pt-4 text-[9px] font-bold uppercase tracking-tighter opacity-40" data-level="3">Exam-Ready</div>
+                        <div class="level-indicator flex-grow h-1 border-t-2 border-white/5 pt-4 text-[9px] font-bold uppercase tracking-tighter opacity-40" data-level="4">Advanced</div>
+                        <div class="level-indicator flex-grow h-1 border-t-2 border-white/5 pt-4 text-[9px] font-bold uppercase tracking-tighter opacity-40" data-level="5">Explain Mode</div>
+                    </div>
+                </div>
+
+                <!-- QUESTION CARD -->
+                <div id="question-card" class="glass-card p-12 space-y-8 fade-in">
+                    <div class="space-y-2">
+                        <span id="level-label" class="text-[10px] font-black text-[#38BDF8] uppercase tracking-[0.3em]">Level 1: Basic Understanding</span>
+                        <h3 id="question-text" class="text-3xl font-bold leading-tight">Define COD.</h3>
+                    </div>
+
+                    <div class="space-y-6">
+                        <textarea id="answer-input" placeholder="Enter your detailed explanation..." 
+                            class="w-full bg-black/50 border border-white/10 rounded-2xl p-6 text-white placeholder-gray-600 focus:outline-none input-glow transition-all text-lg min-h-[150px] resize-none"></textarea>
+                        
+                        <div class="flex justify-between items-center">
+                            <p class="text-[10px] text-gray-500 italic uppercase tracking-widest">This is not testing — this is understanding analysis</p>
+                            <button onclick="submitAnswer()" class="bg-[#FF2E88] text-white px-10 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-pink-500/20">Analyze Level</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LOADING STATE (Hidden) -->
+                <div id="loading-state" class="hidden glass-card p-12 flex-col items-center justify-center space-y-8">
+                    <div class="flex gap-2">
+                        <div class="w-2 h-2 bg-[#FF2E88] rounded-full animate-bounce" style="animation-delay: -0.32s"></div>
+                        <div class="w-2 h-2 bg-[#FF2E88] rounded-full animate-bounce" style="animation-delay: -0.16s"></div>
+                        <div class="w-2 h-2 bg-[#FF2E88] rounded-full animate-bounce"></div>
+                    </div>
+                    <p id="loading-status" class="text-xs font-bold text-gray-500 uppercase tracking-[0.4em]">Analyzing conceptual depth...</p>
+                </div>
+
+                <!-- EVALUATION CARD (Hidden) -->
+                <div id="evaluation-card" class="hidden space-y-6 fade-in">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left: Diagnosis -->
+                        <div class="glass-card p-8 space-y-6 border-l-4 border-red-500">
+                            <h4 class="text-xs font-black text-gray-500 uppercase tracking-widest">Cognitive Diagnosis</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="text-[10px] font-bold text-red-500 uppercase mb-1">🔍 Missing Components</p>
+                                    <ul id="missing-list" class="text-sm text-gray-300 space-y-1"></ul>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-[#38BDF8] uppercase mb-1">💡 AI Feedback</p>
+                                    <p id="feedback-text" class="text-sm text-gray-300 italic"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Right: Ideal Answer -->
+                        <div class="glass-card p-8 space-y-4 border-l-4 border-green-500">
+                            <h4 class="text-xs font-black text-gray-500 uppercase tracking-widest">Ideal Conceptual Structure</h4>
+                            <div id="ideal-answer" class="text-sm text-gray-400 leading-relaxed bg-white/5 p-4 rounded-xl border border-white/5"></div>
+                        </div>
+                    </div>
+                    <button onclick="nextLevel()" class="w-full bg-white text-black font-black py-5 rounded-2xl text-xs uppercase tracking-widest hover:bg-[#FF2E88] hover:text-white transition-all">Move to Level <span id="next-level-num">2</span> →</button>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const topics = {
+            cod: {
+                name: "Chemical Oxygen Demand (COD)",
+                levels: [
+                    {
+                        label: "Level 1: Basic Understanding",
+                        question: "Define COD.",
+                        ideal: "Chemical Oxygen Demand (COD) is the total amount of oxygen required to chemically oxidize both biodegradable and non-biodegradable organic matter in water using a strong oxidizing agent like Potassium Dichromate (K2Cr2O7).",
+                        rules: ["oxidize", "biodegradable", "non-biodegradable", "potassium dichromate", "K2Cr2O7"],
+                        feedback: "Good start, but you missed the key distinction between biodegradable and non-biodegradable matter."
+                    },
+                    {
+                        label: "Level 2: Conceptual Understanding",
+                        question: "Why is COD important in water quality assessment?",
+                        ideal: "COD is critical because it provides an immediate measure of water pollution, including pollutants that microorganisms cannot break down. It helps in designing treatment plants and monitoring industrial effluent toxicity.",
+                        rules: ["immediate", "pollution", "non-biodegradable", "industrial effluent", "toxicity"],
+                        feedback: "You've captured the speed aspect, but consider its role in industrial monitoring."
+                    },
+                    {
+                        label: "Level 3: Exam-Level Mastery",
+                        question: "Explain COD with its chemical reaction and significance.",
+                        ideal: "Reaction: Organic Matter + K2Cr2O7 + H2SO4 → CO2 + H2O + Cr2(SO4)3. Significance: It's faster than BOD (3 hours vs 5 days) and measures the total chemical load of the water sample.",
+                        rules: ["H2SO4", "Cr2(SO4)3", "faster", "BOD", "3 hours"],
+                        feedback: "Missing the sulfuric acid (H2SO4) catalyst in your reaction."
+                    },
+                    {
+                        label: "Level 4: Advanced Analysis",
+                        question: "How is COD fundamentally different from BOD?",
+                        ideal: "BOD measures only biodegradable organics via microbial oxidation over 5 days, while COD measures all oxidizable matter via chemical oxidation in 3 hours. COD values are always higher than BOD values.",
+                        rules: ["higher", "microbial", "chemical", "all oxidizable"],
+                        feedback: "Excellent distinction. Remember that COD is always > BOD."
+                    },
+                    {
+                        label: "Level 5: Explain Mode (The Final Boss)",
+                        question: "Explain COD as if teaching it to a junior student who has never heard of it.",
+                        ideal: "Imagine water as a soup. BOD is how much 'food' bacteria can eat. COD is how much 'stuff' can be burned away using strong chemicals. It tells us how dirty the water is, even if the bacteria can't eat it.",
+                        rules: ["dirty", "chemicals", "eat", "bacteria"],
+                        feedback: "Great analogy! You've proven you truly understand the core concept."
+                    }
+                ]
+            }
+        };
+
+        let currentTopic = 'cod';
+        let currentLevel = 0;
+
+        async function submitAnswer() {
+            const answer = document.getElementById('answer-input').value.toLowerCase();
+            if (!answer) return;
+
+            // Show Loading
+            document.getElementById('question-card').classList.add('hidden');
+            document.getElementById('loading-state').classList.remove('hidden');
+            document.getElementById('loading-state').classList.add('flex');
+
+            const steps = ["Analyzing conceptual depth...", "Evaluating structure...", "Checking missing components..."];
+            const loadingStatus = document.getElementById('loading-status');
+            
+            for (let step of steps) {
+                loadingStatus.innerText = step;
+                await new Promise(r => setTimeout(r, 800));
+            }
+
+            // Analysis
+            const levelData = topics[currentTopic].levels[currentLevel];
+            const missing = levelData.rules.filter(rule => !answer.includes(rule.toLowerCase()));
+            
+            // Populate Evaluation
+            const missingList = document.getElementById('missing-list');
+            missingList.innerHTML = missing.length > 0 
+                ? missing.map(m => `<li>❌ ${m}</li>`).join('')
+                : '<li>✅ No major components missing</li>';
+            
+            document.getElementById('feedback-text').innerText = levelData.feedback;
+            document.getElementById('ideal-answer').innerText = levelData.ideal;
+            document.getElementById('next-level-num').innerText = currentLevel + 2;
+
+            // Show Evaluation
+            document.getElementById('loading-state').classList.remove('flex');
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('evaluation-card').classList.remove('hidden');
+        }
+
+        function nextLevel() {
+            currentLevel++;
+            if (currentLevel < topics[currentTopic].levels.length) {
+                // Update UI for next level
+                const levelData = topics[currentTopic].levels[currentLevel];
+                document.getElementById('level-count').innerText = `Level ${currentLevel + 1}/5`;
+                document.getElementById('level-label').innerText = levelData.label;
+                document.getElementById('question-text').innerText = levelData.question;
+                document.getElementById('answer-input').value = "";
+                
+                // Update level indicators
+                const indicators = document.querySelectorAll('.level-indicator');
+                indicators[currentLevel].classList.add('level-active');
+                indicators[currentLevel].classList.remove('opacity-40');
+                
+                // Switch back to question card
+                document.getElementById('evaluation-card').classList.add('hidden');
+                document.getElementById('question-card').classList.remove('hidden');
+            } else {
+                // End of Deep Audit
+                window.location.href = 'evaluation_board.html';
+            }
+        }
+    </script>
+</body>
+</html>

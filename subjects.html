@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subjects – ConceptLens</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pink: #FF3399;
+            --blue: #00D2FF;
+            --bg: #050505;
+            --surface: #0F0F0F;
+            --border: rgba(255, 255, 255, 0.08);
+            --grid-color: rgba(255, 51, 153, 0.05);
+            --grid-size: 40px;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+                radial-gradient(circle at 50% 50%, rgba(255, 51, 153, 0.05) 0%, transparent 100%),
+                radial-gradient(circle at 80% 20%, rgba(255, 51, 153, 0.08) 0%, transparent 50%);
+            background-size: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size), 100% 100%, 100% 100%;
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .sidebar-item {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .sidebar-item.active {
+            color: var(--pink);
+            text-shadow: 0 0 10px rgba(255, 46, 136, 0.3);
+        }
+
+        .sidebar-item.active::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 20px;
+            background: var(--pink);
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 10px var(--pink);
+        }
+
+        .subject-card {
+            background: var(--card-bg);
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .subject-card:not(.coming-soon):hover {
+            transform: scale(1.03) translateY(-5px);
+            border-color: rgba(255, 46, 136, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 46, 136, 0.1);
+        }
+
+        .coming-soon {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .coming-soon-badge {
+            font-size: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 99px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--pink);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="flex h-screen">
+    <!-- LEFT SIDEBAR -->
+    <aside class="w-1/5 border-r border-white/5 flex flex-col p-10 space-y-16 z-20 bg-black/50 backdrop-blur-xl">
+        <div class="text-xl font-bold tracking-tight cursor-pointer" onclick="window.location.href='index.html'">
+            ConceptLens <span class="text-2xl">🧠</span>
+        </div>
+
+        <nav class="flex flex-col space-y-8 flex-grow">
+            <div class="space-y-6">
+                <a href="#" class="sidebar-item active flex items-center gap-3 text-lg font-medium group">
+                    <span class="text-xl">📚</span> Subjects
+                </a>
+                <a href="revision.html" class="sidebar-item flex items-center gap-3 text-lg font-light text-gray-500 hover:text-white group">
+                    <span class="text-xl">📘</span> Revision
+                </a>
+                <a href="subjects.html?view=progress" class="sidebar-item flex items-center gap-3 text-lg font-light text-gray-500 hover:text-white group">
+                    <span class="text-xl">📊</span> Dashboard
+                </a>
+                <a href="profile.html" class="sidebar-item flex items-center gap-3 text-lg font-light text-gray-500 hover:text-white group">
+                    <span class="text-xl">👤</span> Profile
+                </a>
+                <a href="profile.html?openSettings=true" class="sidebar-item flex items-center gap-3 text-lg font-light text-gray-500 hover:text-white group">
+                    <span class="text-xl">⚙️</span> Settings
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- RIGHT MAIN CONTENT -->
+    <main class="flex-grow flex flex-col relative overflow-y-auto">
+        <!-- Top Nav -->
+        <header class="p-10 flex justify-end items-center">
+            <a href="about.html" class="nav-link relative text-sm font-light text-gray-400 hover:text-white transition-colors duration-300">About</a>
+        </header>
+
+        <!-- Center Content -->
+        <section class="flex-grow flex flex-col items-center justify-center max-w-5xl mx-auto w-full px-10 pb-20">
+            <div class="text-center space-y-4 mb-16 fade-in">
+                <h1 id="page-title" class="text-4xl md:text-5xl font-bold tracking-tight">Let’s Check Your Understanding</h1>
+                <p id="page-subtitle" class="text-gray-400 text-lg md:text-xl font-light">Choose a subject and start your audit</p>
+            </div>
+
+            <!-- Subject Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full fade-in" style="animation-delay: 0.2s;">
+                <!-- EVS Card (Active) -->
+                <div id="evs-card" class="subject-card p-8 rounded-2xl cursor-pointer group relative overflow-hidden" onclick="window.location.href='input.html'">
+                    <div class="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="text-[#FF2E88]">→</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="w-12 h-12 bg-[#FF2E88]/10 rounded-xl flex items-center justify-center text-2xl mb-2">
+                            🌿
+                        </div>
+                        <h3 class="text-xl font-bold">EVS</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed">Quantify your knowledge on Environmental Sciences and sustainability.</p>
+                        <div id="evs-action-label" class="pt-2 flex items-center gap-2 text-xs font-semibold text-[#FF2E88]">
+                            START AUDIT <span class="group-hover:translate-x-1 transition-transform">→</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Robotics Card -->
+                <div class="subject-card coming-soon p-8 rounded-2xl relative overflow-hidden">
+                    <div class="absolute top-4 right-4">
+                        <span class="coming-soon-badge text-gray-400">Coming Soon</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-2xl mb-2">
+                            🤖
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-400">Robotics</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">Automation, sensors, and the future of intelligent systems.</p>
+                    </div>
+                </div>
+
+                <!-- Applied Math Card -->
+                <div class="subject-card coming-soon p-8 rounded-2xl relative overflow-hidden">
+                    <div class="absolute top-4 right-4">
+                        <span class="coming-soon-badge text-gray-400">Coming Soon</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-2xl mb-2">
+                            📐
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-400">Applied Mathematics</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">Calculus, linear algebra, and complex problem solving.</p>
+                    </div>
+                </div>
+
+                <!-- C++ OOP Card -->
+                <div class="subject-card coming-soon p-8 rounded-2xl relative overflow-hidden">
+                    <div class="absolute top-4 right-4">
+                        <span class="coming-soon-badge text-gray-400">Coming Soon</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-2xl mb-2">
+                            💻
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-400">C++ OOP</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">Object-oriented programming, memory management, and data structures.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script>
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const view = urlParams.get('view');
+            
+            const pageTitle = document.getElementById('page-title');
+            const pageSubtitle = document.getElementById('page-subtitle');
+            const evsCard = document.getElementById('evs-card');
+            const evsActionLabel = document.getElementById('evs-action-label');
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+
+            if (view === 'progress') {
+                // Update for Dashboard mode
+                pageTitle.innerText = "See Your Progress";
+                pageSubtitle.innerText = "Select a subject to view your learning analytics";
+                evsCard.setAttribute('onclick', "window.location.href='dashboard.html'");
+                evsActionLabel.innerHTML = 'SEE PROGRESS <span class="group-hover:translate-x-1 transition-transform">→</span>';
+                
+                // Update active sidebar item
+                sidebarItems.forEach(item => {
+                    item.classList.remove('active', 'font-medium');
+                    item.classList.add('font-light', 'text-gray-500');
+                    if (item.innerText.includes('Dashboard')) {
+                        item.classList.add('active', 'font-medium');
+                        item.classList.remove('font-light', 'text-gray-500');
+                    }
+                });
+            } else {
+                // Default Subjects mode
+                // Sidebar already has 'Subjects' as active by default in HTML
+            }
+        };
+    </script>
+</body>
+</html>
