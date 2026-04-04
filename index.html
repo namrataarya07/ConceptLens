@@ -6,99 +6,12 @@
     <title>ConceptLens – AI Learning Auditor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --pink: #FF3399;
-            --grid-color: rgba(255, 51, 153, 0.05);
-            --grid-size: 40px;
-        }
-
-        body {
-            background-color: #050505;
-            background-image: 
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
-                radial-gradient(circle at 0% 0%, rgba(255, 51, 153, 0.03) 0%, transparent 50%),
-                radial-gradient(circle at 100% 100%, rgba(0, 210, 255, 0.03) 0%, transparent 50%);
-            background-size: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size), 100% 100%, 100% 100%;
-            color: #FFFFFF;
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .fade-in {
-            opacity: 0;
-            animation: fadeIn 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .float {
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-25px); }
-        }
-
-        .glow-pulse {
-            animation: glowPulse 3s ease-in-out infinite;
-        }
-
-        @keyframes glowPulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(255, 51, 153, 0.4); }
-            50% { box-shadow: 0 0 40px rgba(255, 51, 153, 0.7); }
-        }
-
-        .mascot-glow {
-            filter: blur(100px);
-            background: radial-gradient(circle, rgba(255, 51, 153, 0.1) 0%, rgba(0, 210, 255, 0.05) 100%);
-        }
-
-        .btn-hover {
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        .btn-hover:hover {
-            transform: scale(1.05) translateY(-2px);
-            box-shadow: 0 10px 40px rgba(255, 51, 153, 0.5);
-            filter: brightness(1.1);
-        }
-
-        .headline-photo {
-            color: #FFFFFF;
-            font-weight: 900;
-            letter-spacing: -0.04em;
-            line-height: 1;
-        }
-
-        .nav-link {
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            width: 0;
-            height: 1px;
-            background: var(--pink);
-            transition: width 0.3s ease;
-        }
-
-        .nav-link:hover::after {
-            width: 100%;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="min-h-screen flex flex-col items-start justify-start">
+    <div class="mouse-glow"></div>
+    <div class="scan-line"></div>
+
     <!-- Top Navigation -->
     <nav class="absolute top-0 left-0 right-0 p-12 lg:px-24 flex justify-between items-center w-full max-w-7xl mx-auto z-50 fade-in">
         <div class="text-xl font-bold tracking-tight cursor-pointer flex items-center gap-3" onclick="window.location.href='index.html'">
@@ -117,7 +30,7 @@
                     <p class="text-blue-400 text-xs font-black uppercase tracking-[0.3em]">AI-Powered Knowledge Audit</p>
                 </div>
                 <h1 class="text-6xl md:text-8xl headline-photo">
-                    Know What You <br> <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-500">Don't Understand.</span>
+                    Know What You <br> <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-500 hover:drop-shadow-[0_0_15px_rgba(255,51,153,0.5)] transition-all duration-500">Don't Understand.</span>
                 </h1>
             </div>
 
@@ -136,8 +49,9 @@
             </div>
 
             <div class="pt-6">
-                <button onclick="window.location.href='subjects.html'" class="bg-gradient-to-r from-pink-500 to-rose-600 text-white px-12 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] glow-pulse btn-hover shadow-xl">
-                    Begin Mastery Session
+                <button onclick="window.location.href='subjects.html'" class="relative group bg-gradient-to-r from-pink-500 to-rose-600 text-white px-12 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] glow-pulse btn-hover shadow-xl overflow-hidden">
+                    <span class="relative z-10">Begin Mastery Session</span>
+                    <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
                 </button>
             </div>
         </div>
@@ -211,6 +125,13 @@
     </main>
 
     <script>
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX;
+            const y = e.clientY;
+            document.documentElement.style.setProperty('--mouse-x', `${x}px`);
+            document.documentElement.style.setProperty('--mouse-y', `${y}px`);
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             console.log('ConceptLens Landing Page Loaded');
         });
